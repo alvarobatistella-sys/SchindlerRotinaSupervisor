@@ -1,4 +1,5 @@
 import { downloadExcel } from './excel-export.js';
+import { classifyReasons, valueAddedColors, valueAddedColor, valueAddedLabel } from './value-added.js';
 // Dashboard independente, integrado ao estado e à autenticação existentes.
 export function aggregate(sessions, now = Date.now()) {
   const totals = { category: new Map(), reason: new Map(), demand: new Map(), supervisor: new Map() };
@@ -44,18 +45,19 @@ export function createDashboards(React) {
     return `${Math.floor(seconds / 3600)}h ${String(Math.floor(seconds / 60) % 60).padStart(2, '0')}min ${String(seconds % 60).padStart(2, '0')}s`;
   };
   const percent = value => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%';
-  function Chart({ title, rows, total, color }) {
+  function Chart({ title, rows, total, color, classified = false }) {
     return h('section', { className: 'panel dashboard-chart', 'aria-label': title },
       h('h2', null, title),
       h('p', null, 'Tempo registrado e participação no total filtrado'),
+      classified && h('div', { className: 'value-added-legend' }, [...Object.keys(valueAddedColors), null].map(value => h('span', { key: value || 'none' }, h('i', { style: { background: valueAddedColor(value) }, 'aria-hidden': true }), valueAddedLabel(value)))),
       rows.length ? h('ul', { className: 'dashboard-bars' }, rows.map(row => h('li', { key: row.key },
-        h('div', { className: 'dashboard-bar-label' }, h('span', null, row.label), h('strong', null, duration(row.value))),
+        h('div', { className: 'dashboard-bar-label' }, h('span', null, row.label, classified && h('small', { className: 'value-added-badge' }, valueAddedLabel(row.classification))), h('strong', null, duration(row.value))),
         h('div', { className: 'dashboard-bar-line' },
-          h('div', { className: 'bar-track', 'aria-hidden': true }, h('div', { style: { width: `${row.value / total * 100}%`, background: color } })),
+          h('div', { className: 'bar-track', 'aria-hidden': true }, h('div', { style: { width: `${row.value / total * 100}%`, background: classified ? valueAddedColor(row.classification) : color } })),
           h('span', null, percent(row.value / total * 100)))
       ))) : h('div', { className: 'empty' }, h('p', null, 'Nenhum tempo registrado para os filtros selecionados.')));
   }
-  return function Dashboards({ sessions, supervisors, now }) {
+  return function Dashboards({ sessions, supervisors, now, entries = [], catalogError = '' }) {
     const [supervisor, setSupervisor] = React.useState('');
     const [from, setFrom] = React.useState('');
     const [until, setUntil] = React.useState('');
@@ -77,6 +79,7 @@ export function createDashboards(React) {
         h('button', { type: 'button', onClick: () => { setSupervisor(''); setFrom(''); setUntil(''); } }, 'Limpar filtros'),
         h('button', { type: 'button', disabled: !filtered.some(session => session.segments.length), onClick: () => downloadExcel(filtered, now) }, 'Baixar Excel (.xlsx)')),
       invalid && h('p', { className: 'error', role: 'alert' }, 'A data inicial deve ser anterior ou igual à data final.'),
+      catalogError && h('p', { className: 'error', role: 'status' }, 'Não foi possível atualizar as classificações. ' + catalogError),
       h('div', { className: 'stats' },
         h('article', null, h('span', null, 'Tempo registrado'), h('strong', null, duration(data.duration)), h('small', null, 'Inclui pausas e intervalos registrados')),
         h('article', null, h('span', null, 'Acompanhamentos'), h('strong', null, filtered.length), h('small', null, `${data.segments} trechos com tempo registrado`)),
@@ -86,6 +89,6 @@ export function createDashboards(React) {
         h(Chart, { title: 'Por supervisor', rows: data.supervisor, total: data.duration, color: '#354c67' }),
         h(Chart, { title: 'Por categoria', rows: data.category, total: data.duration, color: '#d93643' }),
         h(Chart, { title: 'Por demanda', rows: data.demand, total: data.duration, color: '#328573' }),
-        h(Chart, { title: 'Por motivo', rows: data.reason, total: data.duration, color: '#9a6331' })));
+        h(Chart, { title: 'Por motivo', rows: classifyReasons(data.reason, entries), total: data.duration, classified: true })));
   };
 }

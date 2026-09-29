@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-const source = (await readFile(new URL('./assets/dashboards.js', import.meta.url), 'utf8')).replace("import { downloadExcel } from './excel-export.js';", 'const downloadExcel = () => {};');
+const valueAddedSource = await readFile(new URL('./assets/value-added.js', import.meta.url), 'utf8');
+const valueAddedUrl = 'data:text/javascript;base64,' + Buffer.from(valueAddedSource).toString('base64');
+const source = (await readFile(new URL('./assets/dashboards.js', import.meta.url), 'utf8')).replace("import { downloadExcel } from './excel-export.js';", 'const downloadExcel = () => {};').replace('./value-added.js', valueAddedUrl);
 const { aggregate, filterSessions, createDashboards } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
 const start = new Date('2026-09-28T09:00:00').getTime();
 const sessions = [
@@ -34,5 +36,5 @@ assert.ok(!tree.includes('NaN'));
 assert.ok(JSON.stringify(Dashboard({ sessions: [], supervisors: [], now: start })).includes('Nenhum tempo registrado'));
 const bundle = await readFile(new URL('./assets/index-DWd9uucD.js', import.meta.url), 'utf8');
 assert.ok(bundle.includes('`Relatórios`,`Dashboards`'));
-assert.ok(bundle.includes('SupervisorDashboards,{sessions:u.sessions,supervisors:u.supervisors,now:x}'));
+assert.ok(bundle.includes('SupervisorDashboards,{sessions:u.sessions,supervisors:u.supervisors,now:x,entries:a.entries,catalogError:a.error}'));
 console.log('OK: agregações, filtros, períodos, dados legados, estado vazio e integração do menu.');

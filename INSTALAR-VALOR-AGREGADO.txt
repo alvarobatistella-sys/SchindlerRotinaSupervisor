@@ -1,0 +1,11 @@
+1. Abra o projeto Supabase utilizado por este site.
+2. Abra SQL Editor, crie uma consulta e cole o conteúdo de valor-agregado.sql.
+3. Execute a consulta. Ela mantém os registros existentes e adiciona a classificação por descrição.
+4. Envie index.html, assets e as imagens deste pacote ao repositório do site, mantendo a estrutura das pastas.
+5. Depois da publicação, entre como administrador e abra Configurações.
+6. Na coluna Valor agregado, escolha VA, NVA ou NNVA. A seleção é salva automaticamente; confira a mensagem de confirmação.
+7. Em Dashboards, Por motivo usa VA verde, NVA vermelho e NNVA laranja. A legenda também identifica os tipos por texto.
+
+Sem classificação aparece em cinza. Descrições livres precisam de uma descrição correspondente no cadastro para receber classificação. Não há classificação automática por aproximação.
+As cores seguem o cadastro atual, inclusive para registros históricos. Os tempos e as atividades gravadas não são alterados.
+Este pacote mantém a conexão Supabase da versão anterior. Execute o SQL no projeto correspondente ao site que está atualizando.
