@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 const valueAddedSource = await readFile(new URL('./assets/value-added.js', import.meta.url), 'utf8');
 const valueAddedUrl = 'data:text/javascript;base64,' + Buffer.from(valueAddedSource).toString('base64');
-const source = (await readFile(new URL('./assets/dashboards.js', import.meta.url), 'utf8')).replace("import { downloadExcel } from './excel-export.js';", 'const downloadExcel = () => {};').replace('./value-added.js', valueAddedUrl);
+const source = (await readFile(new URL('./assets/dashboards.js', import.meta.url), 'utf8')).replace("import { downloadExcel } from './excel-export.js';", 'const downloadExcel = () => {};').replace('./value-added.js', valueAddedUrl).replace("import { printDashboard } from './dashboard-pdf.js';", 'const printDashboard = () => {};');
 const { aggregate, filterSessions, createDashboards } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
 const start = new Date('2026-09-28T09:00:00').getTime();
 const sessions = [

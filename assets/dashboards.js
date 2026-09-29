@@ -1,4 +1,5 @@
 import { downloadExcel } from './excel-export.js';
+import { printDashboard } from './dashboard-pdf.js';
 import { classifyReasons, valueAddedColors, valueAddedColor, valueAddedLabel } from './value-added.js';
 // Dashboard independente, integrado ao estado e à autenticação existentes.
 export function aggregate(sessions, now = Date.now()) {
@@ -77,7 +78,8 @@ export function createDashboards(React) {
         h('label', null, 'De', h('input', { type: 'date', value: from, max: until || undefined, onChange: event => setFrom(event.target.value) })),
         h('label', null, 'Até', h('input', { type: 'date', value: until, min: from || undefined, onChange: event => setUntil(event.target.value) })),
         h('button', { type: 'button', onClick: () => { setSupervisor(''); setFrom(''); setUntil(''); } }, 'Limpar filtros'),
-        h('button', { type: 'button', disabled: !filtered.some(session => session.segments.length), onClick: () => downloadExcel(filtered, now) }, 'Baixar Excel (.xlsx)')),
+        h('button', { type: 'button', disabled: !filtered.some(session => session.segments.length), onClick: () => downloadExcel(filtered, now) }, 'Baixar Excel (.xlsx)'),
+        h('button', { type: 'button', disabled: !!invalid, title: 'Na janela de impressão, escolha Salvar como PDF', onClick: event => printDashboard(event.currentTarget.closest('.dashboards'), { supervisor: options.get(supervisor) || 'Todos os supervisores', from, until, now }) }, 'Salvar em PDF')),
       invalid && h('p', { className: 'error', role: 'alert' }, 'A data inicial deve ser anterior ou igual à data final.'),
       catalogError && h('p', { className: 'error', role: 'status' }, 'Não foi possível atualizar as classificações. ' + catalogError),
       h('div', { className: 'stats' },
