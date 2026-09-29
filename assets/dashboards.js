@@ -1,6 +1,6 @@
 import { downloadExcel } from './excel-export.js';
 import { printDashboard } from './dashboard-pdf.js';
-import { classifyReasons, valueAddedColors, valueAddedColor, valueAddedLabel } from './value-added.js';
+import { classifyReasons, valueAddedColors, valueAddedColor, valueAddedLabel } from './value-added.js?v=review-va-1';
 // Dashboard independente, integrado ao estado e à autenticação existentes.
 export function aggregate(sessions, now = Date.now()) {
   const totals = { category: new Map(), reason: new Map(), demand: new Map(), supervisor: new Map() };
@@ -20,9 +20,11 @@ export function aggregate(sessions, now = Date.now()) {
         supervisor: supervisorKey
       };
       for (const [field, key] of Object.entries(fields)) {
-        const item = totals[field].get(key) || { key, label: field === 'supervisor' ? session.supervisor || 'Sem supervisor' : key, value: 0 };
+        const override = field === 'reason' && valueAddedColors[activity?.value_added] ? activity.value_added : null;
+        const groupKey = override ? JSON.stringify([key, override]) : key;
+        const item = totals[field].get(groupKey) || { key: groupKey, label: field === 'supervisor' ? session.supervisor || 'Sem supervisor' : key, value: 0, ...(override ? { override } : {}) };
         item.value += value;
-        totals[field].set(key, item);
+        totals[field].set(groupKey, item);
       }
       duration += value;
       segments++;

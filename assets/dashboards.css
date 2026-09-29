@@ -3,3 +3,5 @@
 .activity-code-preview{margin:12px 0;padding:14px 16px;background:#f0f7f4;border:1px solid #b8d6c7;border-radius:7px;overflow-wrap:anywhere}.activity-code-preview strong{font-size:14px}.activity-code-preview p{margin:8px 0;color:#305d4b}.activity-code-preview small{color:#50665b}
 
 .value-added-control{min-width:170px}.value-added-control small{max-width:240px;white-space:normal}.value-added-legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin:16px 0;font-size:12px}.value-added-legend span{display:inline-flex;align-items:center;gap:6px}.value-added-legend i{display:inline-block;width:11px;height:11px;border-radius:3px}.value-added-badge{display:block;font-size:10px;color:#536172;margin-top:3px}
+
+.review-value-added{margin:18px 0;max-width:480px}.review-value-added small{font-weight:400;line-height:1.5;color:#697787}

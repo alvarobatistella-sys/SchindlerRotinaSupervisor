@@ -10,7 +10,15 @@ export function classifyReasons(rows, entries) {
     if (!byDescription.has(key)) byDescription.set(key, value);
     else if (byDescription.get(key) !== value) byDescription.set(key, null);
   }
-  return rows.map(row => ({ ...row, classification: byDescription.get(normalize(row.label)) || null }));
+  const groups = new Map();
+  for (const row of rows) {
+    const classification = valueAddedColors[row.override] ? row.override : byDescription.get(normalize(row.label)) || null;
+    const key = JSON.stringify([row.label, classification]);
+    const group = groups.get(key) || { ...row, key, value: 0, classification };
+    group.value += row.value;
+    groups.set(key, group);
+  }
+  return [...groups.values()].sort((a, b) => b.value - a.value || a.label.localeCompare(b.label, 'pt-BR'));
 }
 export function createValueAddedSelect(React, client) {
   const h = React.createElement;
