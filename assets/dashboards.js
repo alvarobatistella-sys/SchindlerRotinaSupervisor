@@ -1,4 +1,4 @@
-import { downloadExcel } from './excel-export.js';
+import { downloadExcel } from './excel-export.js?v=details-1';
 import { printDashboard } from './dashboard-pdf.js';
 import { classifyReasons, valueAddedColors, valueAddedColor, valueAddedLabel } from './value-added.js?v=review-va-1';
 // Dashboard independente, integrado ao estado e à autenticação existentes.
