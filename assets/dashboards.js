@@ -41,6 +41,14 @@ export function filterSessions(sessions, supervisor, from, until, supervisors) {
   });
 }
 
+export function categorySessions(sessions, category) {
+  if (!category) return sessions;
+  return sessions.map(session => {
+    const activities = session.activities.filter(activity => (activity.category || 'Sem categoria') === category);
+    const ids = new Set(activities.map(activity => activity.id));
+    return { ...session, activities, segments: session.segments.filter(segment => ids.has(segment.activityId) || (category === 'Sem categoria' && !session.activities.some(activity => activity.id === segment.activityId))) };
+  });
+}
 export function createDashboards(React) {
   const h = React.createElement;
   const duration = value => {
@@ -48,12 +56,15 @@ export function createDashboards(React) {
     return `${Math.floor(seconds / 3600)}h ${String(Math.floor(seconds / 60) % 60).padStart(2, '0')}min ${String(seconds % 60).padStart(2, '0')}s`;
   };
   const percent = value => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%';
-  function Chart({ title, rows, total, color, classified = false }) {
+  function Chart({ title, rows, total, color, classified = false, onSelect, selected, subtitle, actions }) {
     return h('section', { className: 'panel dashboard-chart', 'aria-label': title },
       h('h2', null, title),
-      h('p', null, 'Tempo registrado e participação no total filtrado'),
+      h('p', null, subtitle || 'Tempo registrado e participação no total filtrado'),
+      actions,
+      onSelect && h('p', { className: 'hint' }, 'Clique em uma categoria para ver seus motivos abaixo.'),
       classified && h('div', { className: 'value-added-legend' }, [...Object.keys(valueAddedColors), null].map(value => h('span', { key: value || 'none' }, h('i', { style: { background: valueAddedColor(value) }, 'aria-hidden': true }), valueAddedLabel(value)))),
       rows.length ? h('ul', { className: 'dashboard-bars' }, rows.map(row => h('li', { key: row.key },
+        onSelect && h('button', { type: 'button', className: 'category-drill-button', 'aria-pressed': selected === row.key, 'aria-controls': 'category-reasons', onClick: () => onSelect(row.key) }, row.label + (selected === row.key ? ' — selecionada' : ' — ver motivos')),
         h('div', { className: 'dashboard-bar-label' }, h('span', null, row.label, classified && h('small', { className: 'value-added-badge' }, valueAddedLabel(row.classification))), h('strong', null, duration(row.value))),
         h('div', { className: 'dashboard-bar-line' },
           h('div', { className: 'bar-track', 'aria-hidden': true }, h('div', { style: { width: `${row.value / total * 100}%`, background: classified ? valueAddedColor(row.classification) : color } })),
@@ -64,6 +75,7 @@ export function createDashboards(React) {
     const [supervisor, setSupervisor] = React.useState('');
     const [from, setFrom] = React.useState('');
     const [until, setUntil] = React.useState('');
+    const [category, setCategory] = React.useState('');
     const options = new Map(supervisors.map(item => [item.id, item.name]));
     for (const session of sessions) {
       const key = session.supervisorId || supervisors.find(item => item.name === session.supervisor)?.id || session.supervisor || 'Sem supervisor';
@@ -72,6 +84,7 @@ export function createDashboards(React) {
     const invalid = from && until && from > until;
     const filtered = filterSessions(sessions, supervisor, from, until, supervisors);
     const data = aggregate(filtered, now);
+    const reasons = aggregate(categorySessions(filtered, category), now);
     return h('div', { className: 'dashboards' },
       h('div', { className: 'report-filters' },
         h('label', null, 'Supervisor', h('select', { value: supervisor, onChange: event => setSupervisor(event.target.value) },
@@ -79,7 +92,7 @@ export function createDashboards(React) {
           [...options].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR')).map(([id, name]) => h('option', { key: id, value: id }, name)))),
         h('label', null, 'De', h('input', { type: 'date', value: from, max: until || undefined, onChange: event => setFrom(event.target.value) })),
         h('label', null, 'Até', h('input', { type: 'date', value: until, min: from || undefined, onChange: event => setUntil(event.target.value) })),
-        h('button', { type: 'button', onClick: () => { setSupervisor(''); setFrom(''); setUntil(''); } }, 'Limpar filtros'),
+        h('button', { type: 'button', onClick: () => { setSupervisor(''); setFrom(''); setUntil(''); setCategory(''); } }, 'Limpar filtros'),
         h('button', { type: 'button', disabled: !filtered.some(session => session.segments.length), onClick: () => downloadExcel(filtered, now) }, 'Baixar Excel (.xlsx)'),
         h('button', { type: 'button', disabled: !!invalid, title: 'Na janela de impressão, escolha Salvar como PDF', onClick: event => printDashboard(event.currentTarget.closest('.dashboards'), { supervisor: options.get(supervisor) || 'Todos os supervisores', from, until, now }) }, 'Salvar em PDF')),
       invalid && h('p', { className: 'error', role: 'alert' }, 'A data inicial deve ser anterior ou igual à data final.'),
@@ -91,8 +104,10 @@ export function createDashboards(React) {
       h('p', { className: 'dashboard-note' }, 'Os filtros de data consideram o início de cada acompanhamento. Motivo corresponde à descrição da atividade. Atividades em andamento são atualizadas automaticamente.'),
       h('div', { className: 'dashboard-grid' },
         h(Chart, { title: 'Por supervisor', rows: data.supervisor, total: data.duration, color: '#354c67' }),
-        h(Chart, { title: 'Por categoria', rows: data.category, total: data.duration, color: '#d93643' }),
+        h(Chart, { title: 'Por categoria', rows: data.category, total: data.duration, color: '#d93643', selected: category, onSelect: value => { setCategory(value); setTimeout(() => document.getElementById('category-reasons')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0); } }),
         h(Chart, { title: 'Por demanda', rows: data.demand, total: data.duration, color: '#328573' }),
-        h(Chart, { title: 'Por motivo', rows: classifyReasons(data.reason, entries), total: data.duration, classified: true })));
+        h('div', { id: 'category-reasons', 'aria-live': 'polite' }, h(Chart, { title: category ? 'Motivos — ' + category : 'Por motivo', rows: classifyReasons(reasons.reason, entries), total: reasons.duration, classified: true,
+          subtitle: category ? 'Tempo registrado e participação dentro desta categoria, respeitando supervisor e período selecionados.' : undefined,
+          actions: category && h('button', { type: 'button', onClick: () => setCategory('') }, 'Ver todos os motivos') }))));
   };
 }

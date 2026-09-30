@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 const valueAddedSource = await readFile(new URL('./assets/value-added.js', import.meta.url), 'utf8');
 const valueAddedUrl = 'data:text/javascript;base64,' + Buffer.from(valueAddedSource).toString('base64');
 const source = (await readFile(new URL('./assets/dashboards.js', import.meta.url), 'utf8')).replace("import { downloadExcel } from './excel-export.js?v=details-1';", 'const downloadExcel = () => {};').replace('./value-added.js?v=review-va-1', valueAddedUrl).replace("import { printDashboard } from './dashboard-pdf.js';", 'const printDashboard = () => {};');
-const { aggregate, filterSessions, createDashboards } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+const { aggregate, filterSessions, categorySessions, createDashboards } = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
 const start = new Date('2026-09-28T09:00:00').getTime();
 const sessions = [
   { supervisorId: 'a', supervisor: 'Ana', start, end: null,
@@ -14,6 +14,11 @@ const sessions = [
     segments: [{ activityId: 'one', start, end: start + 60000 }] }
 ];
 const data = aggregate(sessions, start + 120000);
+assert.equal(aggregate(categorySessions(sessions, 'Clientes'), start + 120000).duration, 150000);
+assert.equal(aggregate(categorySessions(filterSessions(sessions, 'a', '', '', []), 'Clientes'), start + 120000).duration, 90000);
+assert.equal(aggregate(categorySessions(sessions, 'Ausente'), start + 120000).duration, 0);
+assert.equal(categorySessions(sessions, ''), sessions);
+assert.equal(sessions[0].activities.length, 2);
 assert.equal(data.duration, 180000);
 assert.equal(data.reason.find(row => row.key === 'Atendimento').value, 150000);
 assert.equal(data.demand.find(row => row.key === 'Imprevista').value, 30000);
