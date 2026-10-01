@@ -1,0 +1,25 @@
+#dashboard-print{display:none}
+@media print {
+  @page{size:A4 portrait;margin:14mm}
+  body{background:#fff!important}
+  body>*:not(#dashboard-print){display:none!important}
+  #dashboard-print{display:block!important;color:#202a36;font-family:Arial,sans-serif;font-size:10pt}
+  #dashboard-print *{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  #dashboard-print h1{font-size:20pt;margin:0 0 10pt}
+  #dashboard-print>p{font-size:9pt;line-height:1.5;margin-bottom:18pt;color:#435064}
+  #dashboard-print .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8pt;margin-bottom:14pt;break-inside:avoid}
+  #dashboard-print .stats article{padding:10pt}
+  #dashboard-print .stats strong{font-size:17pt}
+  #dashboard-print .dashboard-grid{display:block}
+  #dashboard-print .dashboard-chart{margin-top:16pt;padding:12pt;border:1px solid #dce0e5;border-radius:0;break-inside:auto}
+  #dashboard-print .dashboard-chart h2{font-size:14pt;break-after:avoid}
+  #dashboard-print .dashboard-chart>p,#dashboard-print .value-added-legend{break-after:avoid}
+  #dashboard-print .dashboard-bars{overflow:visible;max-height:none;margin-top:14pt;scrollbar-gutter:auto}
+  #dashboard-print .dashboard-bars li{break-inside:avoid;page-break-inside:avoid;margin:0 0 14pt}
+  #dashboard-print .dashboard-bar-label{font-size:10pt}
+  #dashboard-print .dashboard-bar-label strong{font-size:9pt}
+  #dashboard-print .bar-track{height:8pt}
+  #dashboard-print .empty{padding:12pt}
+}
+
+@media print{#dashboard-print>p{white-space:pre-wrap}.activity-report-entry{border-top:1px solid #ccc;padding:12pt 0;break-inside:auto}.activity-report-entry h2{font-size:12pt;break-after:avoid}.activity-report-entry h3{font-size:10pt;break-after:avoid}.activity-report-entry p{font-size:10pt;color:#202a36;line-height:1.5;orphans:3;widows:3}.activity-report-entry .activity-details{white-space:pre-wrap;overflow-wrap:anywhere}}
