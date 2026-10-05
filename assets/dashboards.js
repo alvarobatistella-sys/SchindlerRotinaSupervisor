@@ -71,11 +71,15 @@ export function createDashboards(React) {
           h('span', null, percent(row.value / total * 100)))
       ))) : h('div', { className: 'empty' }, h('p', null, 'Nenhum tempo registrado para os filtros selecionados.')));
   }
-  return function Dashboards({ sessions, supervisors, now, entries = [], catalogError = '' }) {
-    const [supervisor, setSupervisor] = React.useState('');
-    const [from, setFrom] = React.useState('');
-    const [until, setUntil] = React.useState('');
-    const [category, setCategory] = React.useState('');
+  return function Dashboards({ sessions, supervisors, now, entries = [], catalogError = '', filterState }) {
+    const localState = React.useState({supervisor:'',from:'',until:'',category:''});
+    const [filters,setFilters] = filterState || localState;
+    const {supervisor,from,until,category} = filters;
+    const setField = (key,value) => setFilters(previous => ({...previous,[key]:value}));
+    const setSupervisor = value => setField('supervisor',value);
+    const setFrom = value => setField('from',value);
+    const setUntil = value => setField('until',value);
+    const setCategory = value => setField('category',value);
     const options = new Map(supervisors.map(item => [item.id, item.name]));
     for (const session of sessions) {
       const key = session.supervisorId || supervisors.find(item => item.name === session.supervisor)?.id || session.supervisor || 'Sem supervisor';
