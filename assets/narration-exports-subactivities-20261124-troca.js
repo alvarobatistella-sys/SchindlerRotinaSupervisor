@@ -1,4 +1,4 @@
-import {narrationCall} from './activity-narration.js?v=20261113';
+import {narrationCall} from './activity-narration-recentes-20261124.js';
 import {buildRows,workbookBlob,communicationSummary} from './excel-subactivities-20261124-troca.js';
 import {communicationText} from './communications-subactivities-20261124-troca.js';
 import {printDashboard} from './dashboard-pdf.js?v=details-1';
